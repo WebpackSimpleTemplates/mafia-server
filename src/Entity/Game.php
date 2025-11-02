@@ -7,6 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\ORM\Mapping\JoinTable;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
 class Game
@@ -14,6 +15,7 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
+    #[Groups("game")]
     private ?int $id = null;
 
     /**
@@ -26,9 +28,11 @@ class Game
     private ?User $master = null;
 
     #[ORM\Column(options:['default' => true])]
+    #[Groups("game")]
     private ?bool $isRecruitmenting = null;
 
     #[ORM\Column(options:['default' => false])]
+    #[Groups("game")]
     private ?bool $isNight = null;
 
     #[ORM\ManyToOne]
@@ -38,6 +42,7 @@ class Game
     private ?User $accent = null;
 
     #[ORM\Column(options:['default' => true])]
+    #[Groups("game")]
     private ?bool $isFreeSpeech = null;
 
     /**
@@ -45,6 +50,7 @@ class Game
      */
     #[JoinTable("dead_users")]
     #[ORM\ManyToMany(targetEntity: User::class)]
+    #[Groups("game")]
     private Collection $dead;
 
     public function __construct()
@@ -56,6 +62,12 @@ class Game
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    #[Groups("game")]
+    public function getGamers(): Collection
+    {
+        return $this->users;
     }
 
     /**
@@ -94,9 +106,16 @@ class Game
         return $this;
     }
 
+    #[Groups("game")]
     public function getMasterId(): ?int
     {
         return $this->master ? $this->master->getId() : null;
+    }
+
+    #[Groups("game")]
+    public function getSpeakerId(): ?int
+    {
+        return $this->speaker ? $this->speaker->getId() : null;
     }
 
     public function isRecruitmenting(): ?bool
@@ -211,5 +230,21 @@ class Game
         $this->setSpeaker(null);
         $this->setAccent(null);
         $this->setIsFreeSpeech(true);
+    }
+
+    public function dump()
+    {
+        $state = [];
+
+        $state['id'] = $this->id;
+        $state['gamers'] = $this->users;
+        $state['masterId'] = $this->master?->getId();
+        $state['isFreeSpeech'] = $this->isFreeSpeech;
+        $state['speakerId'] = $this->speaker?->getId();
+        $state['accentId'] = $this->accent?->getId();
+        $state['isRecruipmenting'] = $this->isRecruitmenting;
+        $state['isNight'] = $this->isNight;
+
+        return $state;
     }
 }

@@ -9,25 +9,15 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/games')]
 final class GameController extends AbstractController
 {
     #[Route('/{game}', name: 'app_game')]
-    public function index(Game $game)
+    public function index(Game $game, SerializerInterface $serializer)
     {
-        $state = [];
-
-        $state['id'] = $game->getId();
-        $state['gamers'] = $game->getUsers();
-        $state['masterId'] = $game->getMasterId();
-        $state['isFreeSpeech'] = $game->isFreeSpeech();
-        $state['speakerId'] = $game->getSpeaker()?->getId();
-        $state['accentId'] = $game->getAccent()?->getId();
-        $state['isRecruipmenting'] = $game->isRecruitmenting();
-        $state['isNight'] = $game->isNight();
-
-        return $this->json($state);
+        return new Response($serializer->serialize($game, "json", ["groups" => "game"]), 200, ['Content-Type' => 'application/json']);
     }
 
     #[Route('/{game}/join', name:'app_game_join')]
