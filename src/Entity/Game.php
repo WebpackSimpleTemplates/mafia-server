@@ -6,7 +6,6 @@ use App\Repository\GameRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
-use Doctrine\ORM\Mapping\JoinTable;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
@@ -21,42 +20,27 @@ class Game
     /**
      * @var Collection<int, User>
      */
-    #[ORM\ManyToMany(targetEntity: User::class)]
+    #[ORM\ManyToMany(targetEntity: User::class, cascade:['persist'])]
     private Collection $users;
-
-    #[ORM\ManyToOne]
-    private ?User $master = null;
-
-    #[ORM\Column(options:['default' => true])]
-    #[Groups("game")]
-    private ?bool $isRecruitmenting = null;
 
     #[ORM\Column(options:['default' => false])]
     #[Groups("game")]
-    private ?bool $isNight = null;
+    private ?bool $isNight = false;
 
-    #[ORM\ManyToOne]
-    private ?User $speaker = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups("game")]
+    private ?string $winner = null;
 
-    #[ORM\ManyToOne]
-    private ?User $accent = null;
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Groups("game")]
+    private ?string $title = null;
 
     #[ORM\Column(options:['default' => true])]
-    #[Groups("game")]
-    private ?bool $isFreeSpeech = null;
-
-    /**
-     * @var Collection<int, User>
-     */
-    #[JoinTable("dead_users")]
-    #[ORM\ManyToMany(targetEntity: User::class)]
-    #[Groups("game")]
-    private Collection $dead;
+    private ?bool $isRecruitment = true;
 
     public function __construct()
     {
         $this->users = new ArrayCollection();
-        $this->dead = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -94,42 +78,6 @@ class Game
         return $this;
     }
 
-    public function getMaster(): ?User
-    {
-        return $this->master;
-    }
-
-    public function setMaster(?User $master): static
-    {
-        $this->master = $master;
-
-        return $this;
-    }
-
-    #[Groups("game")]
-    public function getMasterId(): ?int
-    {
-        return $this->master ? $this->master->getId() : null;
-    }
-
-    #[Groups("game")]
-    public function getSpeakerId(): ?int
-    {
-        return $this->speaker ? $this->speaker->getId() : null;
-    }
-
-    public function isRecruitmenting(): ?bool
-    {
-        return $this->isRecruitmenting;
-    }
-
-    public function setIsRecruitmenting(bool $isRecruitmenting): static
-    {
-        $this->isRecruitmenting = $isRecruitmenting;
-
-        return $this;
-    }
-
     public function isNight(): ?bool
     {
         return $this->isNight;
@@ -142,109 +90,40 @@ class Game
         return $this;
     }
 
-    public function getSpeaker(): ?User
+
+    public function getWinner(): ?string
     {
-        return $this->speaker;
+        return $this->winner;
     }
 
-    public function setSpeaker(?User $speaker): static
+    public function setWinner(?string $winner): static
     {
-        $this->speaker = $speaker;
+        $this->winner = $winner;
 
         return $this;
     }
 
-    public function getAccent(): ?User
+    public function getTitle(): ?string
     {
-        return $this->accent;
+        return $this->title;
     }
 
-    public function setAccent(?User $accent): static
+    public function setTitle(?string $title): static
     {
-        $this->accent = $accent;
+        $this->title = $title;
 
         return $this;
     }
 
-    public function isFreeSpeech(): ?bool
+    public function isRecruitment(): ?bool
     {
-        return $this->isFreeSpeech;
+        return $this->isRecruitment;
     }
 
-    public function setIsFreeSpeech(bool $isFreeSpeech): static
+    public function setIsRecruitment(bool $isRecruitment): static
     {
-        $this->isFreeSpeech = $isFreeSpeech;
+        $this->isRecruitment = $isRecruitment;
 
         return $this;
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public function getDead(): Collection
-    {
-        return $this->dead;
-    }
-
-    public function addDead(User $dead): static
-    {
-        if (!$this->dead->contains($dead)) {
-            $this->dead->add($dead);
-        }
-
-        return $this;
-    }
-
-    public function removeDead(User $dead): static
-    {
-        $this->dead->removeElement($dead);
-
-        return $this;
-    }
-
-    public function speaker(User $user)
-    {
-        $this->setSpeaker($user);
-        $this->setAccent($user);
-        $this->setIsFreeSpeech(false);
-    }
-
-    public function presenter(User $user)
-    {
-        if ($this->speaker->getId() !== $user->getId()) {
-            $this->setSpeaker(null);
-        }
-        $this->setAccent($user);
-        $this->setIsFreeSpeech(false);
-    }
-
-    public function silence()
-    {
-        $this->setSpeaker(null);
-        $this->setAccent(null);
-        $this->setIsFreeSpeech(false);
-    }
-
-    public function freeSpeech()
-    {
-        $this->setSpeaker(null);
-        $this->setAccent(null);
-        $this->setIsFreeSpeech(true);
-    }
-
-    public function dump()
-    {
-        $state = [];
-
-        $state['id'] = $this->id;
-        $state['gamers'] = $this->users;
-        $state['masterId'] = $this->master?->getId();
-        $state['isFreeSpeech'] = $this->isFreeSpeech;
-        $state['speakerId'] = $this->speaker?->getId();
-        $state['accentId'] = $this->accent?->getId();
-        $state['isRecruipmenting'] = $this->isRecruitmenting;
-        $state['isNight'] = $this->isNight;
-
-        return $state;
     }
 }

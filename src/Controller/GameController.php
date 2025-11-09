@@ -4,16 +4,42 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Entity\Game;
+use App\Payload\CreateGamePayload;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/games')]
 final class GameController extends AbstractController
 {
+    #[Route('/create', name: 'app_create_game')]
+    public function create(
+        #[MapRequestPayload] CreateGamePayload $payload,
+        EntityManagerInterface $entityManager,
+        Security $security
+    )
+    {
+        /** @var User $user */
+        $user = $security->getUser();
+
+        $game = new Game();
+
+        $game->setTitle($payload->title);
+        $game->addUser($user);
+
+        $entityManager->persist($game);
+
+        $entityManager->flush();
+
+        return $this->json([
+            "id" => $game->getId(),
+        ]);
+    }
+
     #[Route('/{game}', name: 'app_game')]
     public function index(Game $game, SerializerInterface $serializer)
     {
@@ -34,20 +60,10 @@ final class GameController extends AbstractController
         return new Response('', 204);
     }
 
-    #[Route('/{game}/start', name: 'app_game_start')]
-    public function start(Game $game, EntityManagerInterface $entityManager)
-    {
-        $game->setIsRecruitmenting(false);
-        $entityManager->flush();
-
-        return new Response('', 204);
-    }
-
     #[Route('/{game}/night', name: 'app_game_night')]
     public function night(Game $game, EntityManagerInterface $entityManager)
     {
         $game->setIsNight(true);
-        $game->silence();
         $entityManager->flush();
 
         return new Response('', 204);
@@ -57,42 +73,6 @@ final class GameController extends AbstractController
     public function day(Game $game, EntityManagerInterface $entityManager)
     {
         $game->setIsNight(false);
-        $entityManager->flush();
-
-        return new Response('', 204);
-    }
-
-    #[Route('/{game}/accent/{user}', name: 'app_game_set_accent')]
-    public function setAccent(Game $game, User $user, EntityManagerInterface $entityManager)
-    {
-        $game->presenter($user);
-        $entityManager->flush();
-
-        return new Response('', 204);
-    }
-
-    #[Route('/{game}/speaker/{user}', name: 'app_game_set_speaker')]
-    public function setSpeaker(Game $game, User $user, EntityManagerInterface $entityManager)
-    {
-        $game->speaker($user);
-        $entityManager->flush();
-
-        return new Response('', 204);
-    }
-
-    #[Route('/{game}/free-speech', name: 'app_game_enable_free_speech')]
-    public function enableFreeSpeech(Game $game, EntityManagerInterface $entityManager)
-    {
-        $game->freeSpeech();
-        $entityManager->flush();
-
-        return new Response('', 204);
-    }
-
-    #[Route('/{game}/silence', name: 'app_game_disable_free_speech')]
-    public function disableFreeSpeech(Game $game, EntityManagerInterface $entityManager)
-    {
-        $game->silence();
         $entityManager->flush();
 
         return new Response('', 204);
