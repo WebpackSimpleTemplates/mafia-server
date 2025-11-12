@@ -20,11 +20,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups("game")]
+    #[Groups("game", "searching")]
     private ?int $id = null;
 
     #[ORM\Column(length: 180)]
-    #[Groups("game")]
+    #[Groups("game", "searching")]
     private ?string $username = null;
 
     /**
@@ -41,7 +41,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Groups("game")]
+    #[Groups("game", "searching")]
     private ?string $avatar = null;
 
     public function getId(): ?int
@@ -116,7 +116,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0" . self::class . "\0password"] = hash('crc32c', $this->password);
-        
+
         return $data;
     }
 

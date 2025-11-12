@@ -6,6 +6,7 @@ use App\Repository\GameRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use PHPUnit\Framework\Attributes\Group;
 use Symfony\Component\Serializer\Attribute\Groups;
 
 #[ORM\Entity(repositoryClass: GameRepository::class)]
@@ -14,7 +15,7 @@ class Game
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
-    #[Groups("game")]
+    #[Groups("game", "searching")]
     private ?int $id = null;
 
     /**
@@ -32,11 +33,24 @@ class Game
     private ?string $winner = null;
 
     #[ORM\Column(length: 255, nullable: true)]
-    #[Groups("game")]
+    #[Groups("game", "searching")]
     private ?string $title = null;
 
     #[ORM\Column(options:['default' => true])]
     private ?bool $isRecruitment = true;
+
+    #[ORM\ManyToOne]
+    #[Groups("game", "searching")]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $master = null;
+
+    #[ORM\Column(nullable:true)]
+    #[Groups("searching")]
+    private ?\DateTime $start = null;
+
+    #[ORM\Column]
+    #[Groups("searching")]
+    private ?int $maxGamers = null;
 
     public function __construct()
     {
@@ -125,5 +139,53 @@ class Game
         $this->isRecruitment = $isRecruitment;
 
         return $this;
+    }
+
+    public function getMaster(): ?User
+    {
+        return $this->master;
+    }
+
+    public function setMaster(?User $master): static
+    {
+        $this->master = $master;
+
+        return $this;
+    }
+
+    public function getStart(): ?\DateTime
+    {
+        return $this->start;
+    }
+
+    public function setStart(?\DateTime $start): static
+    {
+        $this->start = $start;
+
+        return $this;
+    }
+
+    public function getMaxGamers(): ?int
+    {
+        return $this->maxGamers;
+    }
+
+    public function setMaxGamers(int $maxGamers): static
+    {
+        $this->maxGamers = $maxGamers;
+
+        return $this;
+    }
+
+    #[Groups("searching")]
+    public function getGamersNames(): array
+    {
+        $names = [];
+
+        foreach ($this->users as $user) {
+            $names[] = $user->getUsername();
+        }
+
+        return $names;
     }
 }

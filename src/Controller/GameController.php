@@ -9,37 +9,12 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/games')]
 final class GameController extends AbstractController
 {
-    #[Route('/create', name: 'app_create_game')]
-    public function create(
-        #[MapRequestPayload] CreateGamePayload $payload,
-        EntityManagerInterface $entityManager,
-        Security $security
-    )
-    {
-        /** @var User $user */
-        $user = $security->getUser();
-
-        $game = new Game();
-
-        $game->setTitle($payload->title);
-        $game->addUser($user);
-
-        $entityManager->persist($game);
-
-        $entityManager->flush();
-
-        return $this->json([
-            "id" => $game->getId(),
-        ]);
-    }
-
     #[Route('/{game}', name: 'app_game')]
     public function index(Game $game, SerializerInterface $serializer)
     {
